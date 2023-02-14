@@ -4,10 +4,12 @@ from deck_controller import DeckController
 import os
 import json
 import requests
+from mysql.connector import connect, Error
+from dotenv import load_dotenv
+
 
 '''
 TODO: Figure out a better way to deal with choices. Classes shouldn't return choice numbers.
-TODO: Use sqlite as db until the django backend is hosted, or just connect to the db hosted on Railway
 '''
 
 
@@ -41,9 +43,10 @@ def display_user_menu(choice, user_controller, deck_controller):
     print('2. Display decks')
     print('3. Study deck')
     print('4. Sign out')
+    print('5. Edit username')
     try:
         choice = int(input())
-        if choice not in choices.keys() or choice < 0 or choice > 4:
+        if choice not in choices.keys() or choice < 0 or choice > 5:
             choice = 0
     except:
         choice = -1
@@ -57,10 +60,15 @@ def display_user_menu(choice, user_controller, deck_controller):
         case 4:
             user_controller.signOut()
             choice = None
+        case 5:
+            user_controller.update_user_name()
     return choice
 
 
 def display_message(choice, user_controller, deck_controller):
+    if type(choice) != int:
+        print(choice)
+        return
     match choices[choice]:
         case 'nonnumber':
             print('Choice must be a number')
@@ -74,6 +82,8 @@ def display_message(choice, user_controller, deck_controller):
             print('User created')
         case 'user_exists':
             print('User already exists')
+        case 'user_does_not_exist':
+            print('User does not exist')
         case 'show_all_users':
             user_controller.display_users()
         case 'deck_created':
@@ -86,11 +96,28 @@ def display_message(choice, user_controller, deck_controller):
 def main():
     done = False
     choice = None
-    user_controller = UserController()
-    deck_controller = DeckController(user_controller.getCurUser())
+    db = None
+    load_dotenv()
+    try:
+        db = connect(
+        host='containers-us-west-164.railway.app',
+        port='5810',
+        user=os.environ['dbuser'],
+        password=os.environ['password'],
+        database='railway'
+    )
+        user_controller = UserController(db)
+        deck_controller = DeckController(user_controller.getCurUser())
+    except Error as e:
+        print(e)
+        done = True
+    
+    
     while not done:
         if choice is not None:
             display_message(choice, user_controller, deck_controller)
+            if type(choice) != int: 
+                choice = 0
             if choices[choice] == 'exit':
                 done = True
                 break
@@ -100,5 +127,7 @@ def main():
         else:
             choice = display_main_menu(choice, user_controller, deck_controller)
         os.system('clear')
+    if db is not None:
+        db.close()
             
 main()
