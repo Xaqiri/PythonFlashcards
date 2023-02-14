@@ -5,8 +5,8 @@ class UserController:
     
     def __init__(self, db):
         self._cur_user = None
-        self.db = db
-        self.cur = db.cursor()
+        self.db = db.connection
+        self.cur = db.cur
     
     @property
     def cur_user(self):
@@ -78,7 +78,8 @@ class UserController:
                 self._cur_user = User(id=row[0], user_name=row[1], password=row[2])
                 return 2
 
-    def sign_out(self):
+    def sign_out(self, deck):
         self._cur_user = None
+        deck.cur_deck = None
     
     

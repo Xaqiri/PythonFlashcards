@@ -23,6 +23,7 @@ def display_main_menu(choice, user_controller, deck_controller):
         choice = int(input())
         if choice not in choices.keys() or choice < 0 or choice > 4:
             choice = 0
+            return choice
     except:
         choice = -1
     match choice:
@@ -34,14 +35,12 @@ def display_main_menu(choice, user_controller, deck_controller):
             choice = user_controller.sign_in()
             deck_controller.cur_user = user_controller.cur_user
         case 3:
-            # r = requests.get(choices[4])
-            # print(json.dumps(r.json(), indent=2))
             choice = 4
     return choice
 
 def display_user_menu(choice, user_controller, deck_controller):
     print('1. Create new deck')
-    print('2. Study deck')
+    print('2. View deck')
     print('3. Display decks')
     print('4. Update deck')
     print('5. Delete deck')
@@ -53,6 +52,7 @@ def display_user_menu(choice, user_controller, deck_controller):
         choice = int(input())
         if choice not in choices.keys() or choice < 0 or choice > 8:
             choice = 0
+            return choice
     except:
         choice = -1
     match choice: 
@@ -61,17 +61,21 @@ def display_user_menu(choice, user_controller, deck_controller):
         case 1:
             choice = deck_controller.create_deck()
         case 2:
-            pass
+            inp = input('Enter deck name: ')
+            choice = deck_controller.view_deck(inp)
         case 3:
             choice = 6
         case 4:
-            inp = input('Enter deck name: ')
-            choice = deck_controller.update_deck_name(inp)
+            if not deck_controller.cur_deck:
+                inp = input('Enter deck name: ')
+                choice = deck_controller.update_deck_name(inp)
+            else:
+                choice = deck_controller.update_deck_name()
         case 5:
             deckId = input('Enter deck id to delete: ').casefold()
             choice = deck_controller.delete_deck(deckId)
         case 6:
-            user_controller.sign_out()
+            user_controller.sign_out(deck_controller)
             choice = None
         case 7:
             choice = user_controller.update_user_name()
@@ -79,6 +83,8 @@ def display_user_menu(choice, user_controller, deck_controller):
             inp = input('Are you sure? This action is irreversible  y/n ').casefold()
             if inp == 'y':
                 choice = user_controller.delete_user()
+            else:
+                choice = None
     return choice
 
 
@@ -127,8 +133,9 @@ def main():
     if db.connection is None:
         done = True
     else:
-        user_controller = UserController(db.connection)
-        deck_controller = DeckController(db.connection)
+        user_controller = UserController(db)
+        deck_controller = DeckController(db)
+        # card_controller = CardController(db)
     
     while not done:
         if choice is not None:
@@ -138,6 +145,9 @@ def main():
             if choices[choice] == 'exit':
                 done = True
                 break
+        if deck_controller.cur_deck is not None:
+            print(f'Viewing deck: {deck_controller.cur_deck.deck_name}')
+            # choice = display_deck_menu(choice, user_controller, deck_controller)
         if user_controller.cur_user is not None:
             print(f'Logged in as: {user_controller.cur_user.user_name}')
             choice = display_user_menu(choice, user_controller, deck_controller)
