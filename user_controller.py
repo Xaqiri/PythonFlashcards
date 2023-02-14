@@ -29,6 +29,12 @@ class UserController:
         except Error as e:
             return -4
         
+    def display_users(self):
+        sql = "SELECT userId, name FROM users ORDER BY userId"
+        self.cur.execute(sql)
+        for (userId, name) in self.cur:
+            print(f'{userId} {name}')
+            
     def update_user_name(self):
         try:
             new_name = input('Enter new username: ')
@@ -38,6 +44,12 @@ class UserController:
         except Error as e:
             print(e)
             
+    def delete_user(self):
+        self.cur.execute(f'DELETE FROM users WHERE userId = \'{self.cur_user.getId()}\'')
+        self.cur_user = None
+        self.db.commit()
+        return -7
+    
     def sign_in(self):
         check_user = self.get_user_info()
         try:
@@ -59,8 +71,4 @@ class UserController:
     def signOut(self):
         self.cur_user = None
     
-    def display_users(self):
-        sql = "SELECT userId, name FROM users ORDER BY userId"
-        self.cur.execute(sql)
-        for (userId, name) in self.cur:
-            print(f'{userId} {name}')
+    

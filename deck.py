@@ -1,11 +1,10 @@
 import uuid
 
 class Deck:
-    def __init__(self, deck_name, user_id):
-        self.id = uuid.uuid4()
+    def __init__(self, deck_name, user_id, deckId=None):
+        self.id = str(uuid.uuid4()) if deckId is None else deckId
         self.deck_name = deck_name
         self.user_id = user_id
-        self.cards = {}
         
     def setDeckName(self, new_name):
         self.deck_name = new_name
@@ -16,5 +15,7 @@ class Deck:
     def getDeckName(self):
         return self.deck_name
     
-    def getUser(self):
+    def getUserId(self):
         return self.user_id
+    
+    

@@ -3,6 +3,9 @@
 '''
 
 choices = {
+    -9: 'deck_not_found',
+    -8: 'deck_deleted',
+    -7: 'user_deleted',
     -6: 'user_does_not_exist',
     -5: 'deck_exists',
     -4: 'user_exists',
@@ -16,7 +19,8 @@ choices = {
     4: 'show_all_users',
     5: 'deck_created',
     6: 'show_all_decks',
-    99: 'http://localhost:8080/user/all'
+    7: 'delete_user',
+    8: 'deck_name_updated'
 }
 
 # choices2 = {
@@ -24,9 +28,9 @@ choices = {
 #         'nonnumber', 'invalid', 'exit'
 #     ],
 #     'main': [
-#         'user_exists', 'invalid_username', 'invalid_password', 'user_created', 'signed_in', 'show_all_users'
+#
 #     ],
 #     'user': [
-#         'deck_exists', 'deck_created', 'show_all_decks'
+#         'user_exists', 'user_created', 'show_all_users', 'user_updated', 'user_deleted', 'invalid_username', 'invalid_password', 'signed_in'
 #     ]
 # }

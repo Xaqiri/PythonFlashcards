@@ -2,21 +2,22 @@ from globals import *
 from user_controller import UserController
 from deck_controller import DeckController
 import os
-import json
-import requests
 from mysql.connector import connect, Error
 from dotenv import load_dotenv
 
 
 '''
 TODO: Figure out a better way to deal with choices. Classes shouldn't return choice numbers.
+TODO: Move the menus to their own class
+TODO: Add card class and CRUD operations
+TODO: Add study options
 '''
 
 
 def display_main_menu(choice, user_controller, deck_controller):
+    print('0. Exit')
     print('1. Create new user')
     print('2. Sign in')
-    print('3. Exit')
     print('4. Display users')
     try:
         choice = int(input())
@@ -25,43 +26,59 @@ def display_main_menu(choice, user_controller, deck_controller):
     except:
         choice = -1
     match choice:
+        case 0:
+            choice = 3
         case 1:
             choice = user_controller.create_new_user()
         case 2:
             choice = user_controller.sign_in()
+        case 4:
             deck_controller.setCurUser(user_controller.getCurUser())
             # r = requests.get(choices[4])
             # print(json.dumps(r.json(), indent=2))
-        case 3:
-            choice = 3
-        case 4:
             choice = 4
     return choice
 
 def display_user_menu(choice, user_controller, deck_controller):
     print('1. Create new deck')
-    print('2. Display decks')
-    print('3. Study deck')
-    print('4. Sign out')
-    print('5. Edit username')
+    print('2. Study deck')
+    print('3. Display decks')
+    print('4. Update deck')
+    print('5. Delete deck')
+    print('6. Sign out')
+    print('7. Edit username')
+    print('8. Delete user')
+    print('0: Exit')
     try:
         choice = int(input())
-        if choice not in choices.keys() or choice < 0 or choice > 5:
+        if choice not in choices.keys() or choice < 0 or choice > 8:
             choice = 0
     except:
         choice = -1
     match choice: 
+        case 0:
+            choice = 3
         case 1:
             choice = deck_controller.create_deck()
         case 2:
-            choice = 6
-        case 3:
             pass
+        case 3:
+            choice = 6
         case 4:
+            inp = input('Enter deck name: ')
+            choice = deck_controller.update_deck_name(inp)
+        case 5:
+            deckId = input('Enter deck id to delete: ').casefold()
+            choice = deck_controller.delete_deck(deckId)
+        case 6:
             user_controller.signOut()
             choice = None
-        case 5:
+        case 7:
             user_controller.update_user_name()
+        case 8:
+            inp = input('Are you sure? This action is irreversible  y/n ').casefold()
+            if inp == 'y':
+                choice = user_controller.delete_user()
     return choice
 
 
@@ -92,6 +109,14 @@ def display_message(choice, user_controller, deck_controller):
             print('Deck already exists with that name')
         case 'show_all_decks':
             deck_controller.display_decks()
+        case 'user_deleted':
+            print('User deleted')
+        case 'deck_deleted':
+            print('Deck deleted')
+        case 'deck_not_found':
+            print('Deck not found')
+        case 'deck_name_updated':
+            print('Deck name updated ')
         
 def main():
     done = False
@@ -100,14 +125,14 @@ def main():
     load_dotenv()
     try:
         db = connect(
-        host='containers-us-west-164.railway.app',
-        port='5810',
+        host=os.environ['host'],
+        port=os.environ['port'],
         user=os.environ['dbuser'],
         password=os.environ['password'],
-        database='railway'
+        database=os.environ['db']
     )
         user_controller = UserController(db)
-        deck_controller = DeckController(user_controller.getCurUser())
+        deck_controller = DeckController(user_controller.getCurUser(), db)
     except Error as e:
         print(e)
         done = True
