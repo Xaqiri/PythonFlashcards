@@ -4,20 +4,25 @@ from mysql.connector import Error
 
 class DeckController:
     
-    def __init__(self, cur_user, db):
-        self.cur_user = cur_user
+    def __init__(self, db):
+        self._cur_user = None
         self.cur = db.cursor()
         self.db = db
         
-    def setCurUser(self, cur_user):
-        self.cur_user = cur_user
-        
+    @property
+    def cur_user(self):
+        return self._cur_user
+    
+    @cur_user.setter
+    def cur_user(self, cur_user):
+        self._cur_user = cur_user
+    
     def create_deck(self):
         deck_name = input('Deck name: ')
-        new_deck = Deck(deck_name, self.cur_user.getId())
+        new_deck = Deck(deck_name, self._cur_user.id)
         try:
-            print(f'{new_deck.getId()}, {new_deck.getDeckName()}, {new_deck.getUserId()}')
-            self.cur.execute(f'INSERT INTO decks (deckId, name, userId) VALUES (\'{new_deck.getId()}\', \'{new_deck.getDeckName()}\', \'{new_deck.getUserId()}\')')
+            print(f'{new_deck.id}, {new_deck.deck_name}, {new_deck.user_id}')
+            self.cur.execute(f'INSERT INTO decks (deckId, name, userId) VALUES (\'{new_deck.id}\', \'{new_deck.deck_name}\', \'{new_deck.user_id}\')')
             self.db.commit()
             print(self.cur.rowcount, "record inserted")
             return 5
@@ -26,8 +31,8 @@ class DeckController:
             return -5
 
     def display_decks(self):
-        # [print(f'{self.cur_user.decks[i].getDeckName()}, {self.cur_user.decks[i].getId()}') for i in self.cur_user.decks]
-        self.cur.execute(f'SELECT deckId, name FROM decks WHERE userId = \'{self.cur_user.getId()}\' ORDER BY deckId')
+        # [print(f'{self._cur_user.decks[i].deck_name}, {self._cur_user.decks[i].id}') for i in self._cur_user.decks]
+        self.cur.execute(f'SELECT deckId, name FROM decks WHERE userId = \'{self._cur_user.id}\' ORDER BY deckId')
         for (deckId, name) in self.cur:
             print(f'{deckId}, {name}')
 
@@ -49,10 +54,10 @@ class DeckController:
         self.cur.execute(f'SELECT deckId, name, userId FROM decks WHERE deckId = \'{deckId}\'')
         deck = self.cur.fetchone()
         if deck is not None:
-            if (deck[2]) != self.cur_user.getId():
+            if (deck[2]) != self._cur_user.id:
                 return -9
             else:
-                self.cur.execute(f'DELETE FROM decks WHERE deckId = \'{deckId}\' AND userId = \'{self.cur_user.getId()}\'')
+                self.cur.execute(f'DELETE FROM decks WHERE deckId = \'{deckId}\' AND userId = \'{self._cur_user.id}\'')
                 print(self.cur.rowcount, 'record deleted')
                 self.db.commit()
                 return -8

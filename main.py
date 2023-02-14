@@ -1,16 +1,16 @@
 from globals import *
 from user_controller import UserController
 from deck_controller import DeckController
+from database import Database
 import os
-from mysql.connector import connect, Error
-from dotenv import load_dotenv
 
 
 '''
-TODO: Figure out a better way to deal with choices. Classes shouldn't return choice numbers.
+TODO: Figure out a better way to deal with choices. Right now it works more like a status code
 TODO: Move the menus to their own class
 TODO: Add card class and CRUD operations
 TODO: Add study options
+TODO: Cache database calls
 '''
 
 
@@ -18,7 +18,7 @@ def display_main_menu(choice, user_controller, deck_controller):
     print('0. Exit')
     print('1. Create new user')
     print('2. Sign in')
-    print('4. Display users')
+    print('3. Display users')
     try:
         choice = int(input())
         if choice not in choices.keys() or choice < 0 or choice > 4:
@@ -32,8 +32,8 @@ def display_main_menu(choice, user_controller, deck_controller):
             choice = user_controller.create_new_user()
         case 2:
             choice = user_controller.sign_in()
-        case 4:
-            deck_controller.setCurUser(user_controller.getCurUser())
+            deck_controller.cur_user = user_controller.cur_user
+        case 3:
             # r = requests.get(choices[4])
             # print(json.dumps(r.json(), indent=2))
             choice = 4
@@ -71,10 +71,10 @@ def display_user_menu(choice, user_controller, deck_controller):
             deckId = input('Enter deck id to delete: ').casefold()
             choice = deck_controller.delete_deck(deckId)
         case 6:
-            user_controller.signOut()
+            user_controller.sign_out()
             choice = None
         case 7:
-            user_controller.update_user_name()
+            choice = user_controller.update_user_name()
         case 8:
             inp = input('Are you sure? This action is irreversible  y/n ').casefold()
             if inp == 'y':
@@ -117,26 +117,18 @@ def display_message(choice, user_controller, deck_controller):
             print('Deck not found')
         case 'deck_name_updated':
             print('Deck name updated ')
+        case 'user_name_updated':
+            print('User name updated')
         
 def main():
     done = False
     choice = None
-    db = None
-    load_dotenv()
-    try:
-        db = connect(
-        host=os.environ['host'],
-        port=os.environ['port'],
-        user=os.environ['dbuser'],
-        password=os.environ['password'],
-        database=os.environ['db']
-    )
-        user_controller = UserController(db)
-        deck_controller = DeckController(user_controller.getCurUser(), db)
-    except Error as e:
-        print(e)
+    db = Database()
+    if db.connection is None:
         done = True
-    
+    else:
+        user_controller = UserController(db.connection)
+        deck_controller = DeckController(db.connection)
     
     while not done:
         if choice is not None:
@@ -146,13 +138,12 @@ def main():
             if choices[choice] == 'exit':
                 done = True
                 break
-        if user_controller.getCurUser() is not None:
-            print(f'Logged in as: {user_controller.getCurUser().getUserName()}')
+        if user_controller.cur_user is not None:
+            print(f'Logged in as: {user_controller.cur_user.user_name}')
             choice = display_user_menu(choice, user_controller, deck_controller)
         else:
             choice = display_main_menu(choice, user_controller, deck_controller)
         os.system('clear')
-    if db is not None:
-        db.close()
+    db.close()
             
 main()

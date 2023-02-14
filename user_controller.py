@@ -4,12 +4,17 @@ from mysql.connector import Error
 class UserController:
     
     def __init__(self, db):
-        self.cur_user = None
+        self._cur_user = None
         self.db = db
         self.cur = db.cursor()
     
-    def getCurUser(self):
-        return self.cur_user
+    @property
+    def cur_user(self):
+        return self._cur_user
+    
+    @cur_user.setter
+    def cur_user(self, cur_user):
+        self._cur_user = cur_user
     
     def get_user_info(self):
         name = input('Username: ')
@@ -20,7 +25,7 @@ class UserController:
     def create_new_user(self):
         new_user = self.get_user_info()
         sql = "INSERT INTO users (userId, name, password) VALUES (%s, %s, %s)"
-        val = (new_user.getId(), new_user.getUserName(), new_user.getPassword())
+        val = (new_user.id, new_user.user_name, new_user.password)
         try:
             self.cur.execute(sql, val)
             self.db.commit()
@@ -38,22 +43,27 @@ class UserController:
     def update_user_name(self):
         try:
             new_name = input('Enter new username: ')
-            self.cur.execute(f'UPDATE users SET users.name = \'{new_name}\' WHERE users.userId = \'{self.cur_user.getId()}\'')
-            self.db.commit()
-            self.cur_user.setUserName(new_name)
+            if len(new_name) == 0:
+                return -2
+            else:
+                self._cur_user.user_name = new_name
+                self.cur.execute(f'UPDATE users SET users.name = \'{new_name}\' WHERE users.userId = \'{self._cur_user.id}\'')
+                self.db.commit()
+                self._cur_user.user_name = new_name
+                return 9
         except Error as e:
             print(e)
             
     def delete_user(self):
-        self.cur.execute(f'DELETE FROM users WHERE userId = \'{self.cur_user.getId()}\'')
-        self.cur_user = None
+        self.cur.execute(f'DELETE FROM users WHERE userId = \'{self._cur_user.id}\'')
+        self._cur_user = None
         self.db.commit()
         return -7
     
     def sign_in(self):
         check_user = self.get_user_info()
         try:
-            self.cur.execute(f'SELECT userId, name, password FROM users WHERE name = BINARY \'{check_user.getUserName()}\'')
+            self.cur.execute(f'SELECT userId, name, password FROM users WHERE name = BINARY \'{check_user.user_name}\'')
             row = self.cur.fetchone()
         except Error as e:
             print(e)
@@ -62,13 +72,13 @@ class UserController:
         if row is None:
             return -6
         else:
-            if check_user.getPassword() != row[2]:
+            if check_user.password != row[2]:
                 return -3
             else:
-                self.cur_user = User(userId=row[0], user_name=row[1], password=row[2])
+                self._cur_user = User(id=row[0], user_name=row[1], password=row[2])
                 return 2
 
-    def signOut(self):
-        self.cur_user = None
+    def sign_out(self):
+        self._cur_user = None
     
     

@@ -20,7 +20,8 @@ choices = {
     5: 'deck_created',
     6: 'show_all_decks',
     7: 'delete_user',
-    8: 'deck_name_updated'
+    8: 'deck_name_updated',
+    9: 'user_name_updated'
 }
 
 # choices2 = {
