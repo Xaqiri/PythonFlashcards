@@ -16,13 +16,15 @@ choices = {
     1: 'user_created',
     2: 'signed_in',
     3: 'exit',
-    4: 'show_all_users',
+    4: 'display_users',
     5: 'deck_created',
-    6: 'show_all_decks',
+    6: 'display_decks',
     7: 'delete_user',
     8: 'deck_name_updated',
     9: 'user_name_updated',
-    10: 'deck_found'
+    10: 'deck_found',
+    11: 'card_created',
+    12: 'display_cards'
 }
 
 # choices2 = {

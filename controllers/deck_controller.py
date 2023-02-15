@@ -1,13 +1,14 @@
-from deck import Deck 
+from models.deck import Deck 
 from mysql.connector import Error
-
+import time
 
 class DeckController:
     
     def __init__(self, db):
         self._cur_user = None
         self._cur_deck = None
-        self.db = db.connection
+        self.db = db
+        self.connection = db.connection
         self.cur = db.cur
         
     @property
@@ -32,10 +33,10 @@ class DeckController:
         try:
             print(f'{new_deck.id}, {new_deck.deck_name}, {new_deck.user_id}')
             self.cur.execute(f'INSERT INTO decks (deckId, name, userId) SELECT \'{new_deck.id}\' as deckId, \'{new_deck.deck_name}\' as name, \'{new_deck.user_id}\' as userId FROM decks WHERE (name=\'{new_deck.deck_name}\' and userId=\'{new_deck.user_id}\') HAVING COUNT(*) = 0')
-            self.db.commit()
+            self.connection.commit()
             print(self.cur.rowcount, "record inserted")
+            self.db.deck_cache += [(new_deck.id, new_deck.deck_name)]
             return 5 if self.cur.rowcount == 1 else -5
-                
         except Error as e:
             print(e)
             return -5
@@ -43,45 +44,56 @@ class DeckController:
     def display_decks(self):
         self._cur_deck = None
         try:
-            self.cur.execute(f'SELECT deckId, name FROM decks WHERE userId = \'{self._cur_user.id}\' ORDER BY deckId')
-            for (deckId, name) in self.cur:
-                print(f'{deckId}, {name}')
+            if len(self.db.deck_cache) == 0:
+                print('Connecting to database....')
+                sql = f'SELECT deckId, name FROM decks WHERE userId = \'{self._cur_user.id}\' ORDER BY deckId'
+                self.cur.execute(sql)
+                self.db.deck_cache += [i for i in self.cur if i not in self.db.deck_cache]
+                time.sleep(1)
         except Error as e:
             print(e)
+        return 6
 
     def update_deck_name(self, name=None):
-        name = self._cur_deck.deck_name is name is None
+        name = self._cur_deck.deck_name if name is None else name
         try:
             self.cur.execute(f'SELECT name FROM decks WHERE name = \'{name}\'')
             deck = self.cur.fetchone()
             if deck is not None:
                 new_name = input('Enter a new name: ')
                 self.cur.execute(f'UPDATE decks SET name = \'{new_name}\' WHERE name = \'{name}\'')
+                self.db.update_deck_cache(self._cur_deck, new_name)
                 if self._cur_deck:
                     self._cur_deck.deck_name = new_name
-                self.db.commit()
+                self.connection.commit()
                 print(self.cur.rowcount, 'record updated')
                 return 8
             else: 
                 return -9
         except Error as e:
             print(e)
+            return -9
     
     def delete_deck(self, deckId):
-        self.cur.execute(f'SELECT deckId, name, userId FROM decks WHERE deckId = \'{deckId}\'')
-        deck = self.cur.fetchone()
-        if deck is not None:
-            if (deck[2]) != self._cur_user.id:
-                return -9
+        # TODO: Delete deck from cache
+        try:
+            self.cur.execute(f'SELECT deckId, name, userId FROM decks WHERE deckId = \'{deckId}\'')
+            deck = self.cur.fetchone()
+            if deck is not None:
+                if (deck[2]) != self._cur_user.id:
+                    return -9
+                else:
+                    self.cur.execute(f'DELETE FROM decks WHERE deckId = \'{deckId}\' AND userId = \'{self._cur_user.id}\'')
+                    print(self.cur.rowcount, 'record deleted')
+                    self.connection.commit()
+                    return -8
             else:
-                self.cur.execute(f'DELETE FROM decks WHERE deckId = \'{deckId}\' AND userId = \'{self._cur_user.id}\'')
-                print(self.cur.rowcount, 'record deleted')
-                self.db.commit()
-                return -8
-        else:
-            return -9
+                return -9
+        except Error as e:
+            print(e)
         
     def view_deck(self, name):
+        # TODO: Change to use cache
         try:
             self.cur.execute(f'SELECT * FROM decks WHERE name = BINARY \'{name}\'')
             row = self.cur.fetchone()

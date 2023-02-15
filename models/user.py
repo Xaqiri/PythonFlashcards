@@ -29,3 +29,5 @@ class User:
     def password(self, password):
         self._password = password
         
+    def __str__(self):
+        print(f'{self._id}, {self._user_name}')

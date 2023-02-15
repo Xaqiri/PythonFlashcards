@@ -1,11 +1,13 @@
-from user import User 
+from models.user import User 
 from mysql.connector import Error
+import time
 
 class UserController:
     
     def __init__(self, db):
         self._cur_user = None
-        self.db = db.connection
+        self.db = db
+        self.connection = db.connection
         self.cur = db.cur
     
     @property
@@ -28,17 +30,24 @@ class UserController:
         val = (new_user.id, new_user.user_name, new_user.password)
         try:
             self.cur.execute(sql, val)
-            self.db.commit()
+            self.connection.commit()
             print(self.cur.rowcount, "record inserted")
+            self.db.user_cache += [(new_user.id, new_user.user_name)]
             return 1
         except Error as e:
             return -4
         
     def display_users(self):
-        sql = "SELECT userId, name FROM users ORDER BY userId"
-        self.cur.execute(sql)
-        for (userId, name) in self.cur:
-            print(f'{userId} {name}')
+        try:
+            if len(self.db.user_cache) == 0:
+                print('Connecting to database....')
+                sql = "SELECT userId, name FROM users ORDER BY userId"
+                self.cur.execute(sql)
+                self.db.user_cache += [i for i in self.cur if i not in self.db.user_cache]
+                time.sleep(1)
+        except Error as e:
+            print(e)
+        return 4
             
     def update_user_name(self):
         try:
@@ -46,19 +55,24 @@ class UserController:
             if len(new_name) == 0:
                 return -2
             else:
+                self.db.update_user_cache(self._cur_user, new_name)
                 self._cur_user.user_name = new_name
                 self.cur.execute(f'UPDATE users SET users.name = \'{new_name}\' WHERE users.userId = \'{self._cur_user.id}\'')
-                self.db.commit()
+                self.connection.commit()
                 self._cur_user.user_name = new_name
                 return 9
         except Error as e:
             print(e)
             
     def delete_user(self):
-        self.cur.execute(f'DELETE FROM users WHERE userId = \'{self._cur_user.id}\'')
-        self._cur_user = None
-        self.db.commit()
-        return -7
+        # TODO: Delete user from cache
+        try:
+            self.cur.execute(f'DELETE FROM users WHERE userId = \'{self._cur_user.id}\'')
+            self._cur_user = None
+            self.connection.commit()
+            return -7
+        except Error as e:
+            print(e)
     
     def sign_in(self):
         check_user = self.get_user_info()
@@ -81,5 +95,7 @@ class UserController:
     def sign_out(self, deck):
         self._cur_user = None
         deck.cur_deck = None
+        self.db.deck_cache = []
+        self.db.card_cache = []
     
     
