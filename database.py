@@ -20,7 +20,7 @@ class Database:
             self._connection = connect(
             host=os.environ['host'],
             port=os.environ['port'],
-            user=os.environ['dbuser'],
+            user=os.environ['user'],
             password=os.environ['password'],
             database=os.environ['db'],
             buffered=True
@@ -228,8 +228,7 @@ class Database:
                 self.card_cache[index] = (card[0], new_front, new_back)
             elif action == 'DELETE':
                 self.card_cache.pop(index)
-                
-    
+
     def close(self):
         if self._connection is not None:
             self._connection.close()
