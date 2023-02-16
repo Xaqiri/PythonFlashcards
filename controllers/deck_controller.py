@@ -49,7 +49,7 @@ class DeckController:
                 sql = f'SELECT deckId, name FROM decks WHERE userId = \'{self._cur_user.id}\' ORDER BY deckId'
                 self.cur.execute(sql)
                 self.db.deck_cache += [i for i in self.cur if i not in self.db.deck_cache]
-                time.sleep(1)
+                time.sleep(0.5)
         except Error as e:
             print(e)
         return 6
@@ -62,7 +62,7 @@ class DeckController:
             if deck is not None:
                 new_name = input('Enter a new name: ')
                 self.cur.execute(f'UPDATE decks SET name = \'{new_name}\' WHERE name = \'{name}\'')
-                self.db.update_deck_cache(self._cur_deck, new_name)
+                self.db.update_deck_cache(self._cur_deck, new_name, action='PUTS')
                 if self._cur_deck:
                     self._cur_deck.deck_name = new_name
                 self.connection.commit()
@@ -75,7 +75,6 @@ class DeckController:
             return -9
     
     def delete_deck(self, deckId):
-        # TODO: Delete deck from cache
         try:
             self.cur.execute(f'SELECT deckId, name, userId FROM decks WHERE deckId = \'{deckId}\'')
             deck = self.cur.fetchone()
@@ -84,8 +83,10 @@ class DeckController:
                     return -9
                 else:
                     self.cur.execute(f'DELETE FROM decks WHERE deckId = \'{deckId}\' AND userId = \'{self._cur_user.id}\'')
-                    print(self.cur.rowcount, 'record deleted')
                     self.connection.commit()
+                    self.db.update_deck_cache(Deck(deck_id=deck[0], deck_name=deck[1], user_id=deck[2]), action='DELETE')
+                    self._cur_deck = None
+                    print(self.cur.rowcount, 'record deleted')
                     return -8
             else:
                 return -9
@@ -93,7 +94,6 @@ class DeckController:
             print(e)
         
     def view_deck(self, name):
-        # TODO: Change to use cache
         try:
             self.cur.execute(f'SELECT * FROM decks WHERE name = BINARY \'{name}\'')
             row = self.cur.fetchone()
@@ -106,7 +106,7 @@ class DeckController:
         except Error as e:
             print(e)
 
-# insert into decks (deckId, name, userId)
-# select {deckId} as deckId, {name} as name, {userId} as userId
-# where (name={name}, userId={userId})
-# having count(*) = 0;
+    def exit_deck(self):
+        self._cur_deck = None
+        self.db.card_cache = []
+        

@@ -6,10 +6,12 @@ def deck_menu(choice, controllers):
     print('3. Review deck')
     print('4. Edit deck name')
     print('5. Delete this deck')
+    print('6. Update card')
+    print('7. Delete card')
     print('0. Back')
     try:
         choice = int(input())
-        if choice not in choices.keys() or choice < 0 or choice > 5:
+        if choice not in choices.keys() or choice < 0 or choice > 7:
             choice = 0
             return choice
     except:
@@ -32,7 +34,15 @@ def deck_menu(choice, controllers):
                 choice = controllers.get('deck').update_deck_name()
         case 5:
             choice = controllers.get('deck').delete_deck(controllers.get('deck').cur_deck.id)
+        case 6:
+            card_id = input('Enter id of card to edit: ')
+            front = input('Enter front of card: ')
+            back = input('Enter back of card: ')
+            choice = controllers.get('card').update_card(card_id, front, back)
+        case 7:
+            card_id = input('Enter id of card to delete: ')
+            controllers.get('card').delete_card(card_id)
         case 0:
-            controllers.get('deck').cur_deck = None
+            controllers.get('deck').exit_deck()
             choice = None
     return choice

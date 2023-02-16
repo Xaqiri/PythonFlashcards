@@ -44,7 +44,7 @@ class UserController:
                 sql = "SELECT userId, name FROM users ORDER BY userId"
                 self.cur.execute(sql)
                 self.db.user_cache += [i for i in self.cur if i not in self.db.user_cache]
-                time.sleep(1)
+                time.sleep(0.5)
         except Error as e:
             print(e)
         return 4
@@ -55,7 +55,7 @@ class UserController:
             if len(new_name) == 0:
                 return -2
             else:
-                self.db.update_user_cache(self._cur_user, new_name)
+                self.db.update_user_cache(self._cur_user, new_name, action='PUTS')
                 self._cur_user.user_name = new_name
                 self.cur.execute(f'UPDATE users SET users.name = \'{new_name}\' WHERE users.userId = \'{self._cur_user.id}\'')
                 self.connection.commit()
@@ -65,11 +65,11 @@ class UserController:
             print(e)
             
     def delete_user(self):
-        # TODO: Delete user from cache
         try:
             self.cur.execute(f'DELETE FROM users WHERE userId = \'{self._cur_user.id}\'')
-            self._cur_user = None
             self.connection.commit()
+            self.db.update_user_cache(self._cur_user, action='DELETE')
+            self._cur_user = None
             return -7
         except Error as e:
             print(e)
@@ -97,5 +97,3 @@ class UserController:
         deck.cur_deck = None
         self.db.deck_cache = []
         self.db.card_cache = []
-    
-    

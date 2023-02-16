@@ -47,7 +47,45 @@ class CardController:
                 sql = f'SELECT cardId, front, back FROM cards WHERE deckId = \'{self._cur_deck.id}\' ORDER BY front'
                 self.cur.execute(sql)
                 self.db.card_cache += [i for i in self.cur if i not in self.db.card_cache]
-                time.sleep(1)
+                time.sleep(0.5)
         except Error as e:
             print(e)
         return 12
+    
+    def update_card(self, card_id, front=None, back=None):
+        try:
+            sql = f'SELECT cardId, front, back FROM cards WHERE cardId = \'{card_id}\''
+            self.cur.execute(sql)
+            old_card = self.cur.fetchone()
+            if old_card is not None:
+                print(old_card)
+                front = old_card.front if front is None else front
+                back = old_card.back if back is None else back
+                sql = f'''
+                        UPDATE cards 
+                        SET front = \'{front}\', back = \'{back}\'
+                        WHERE  cardId = \'{old_card[0]}\'
+                        '''
+                self.cur.execute(sql)
+                self.connection.commit()
+                print(self.cur.rowcount, 'record updated')
+                self.db.update_card_cache(old_card, new_front=front, new_back=back, action='PUTS')
+            else:
+                print('Oops')
+        except Error as e:
+            print(e)
+            
+    def delete_card(self, card_id):
+        try:
+            sql = f'SELECT * FROM cards WHERE cardId = \'{card_id}\''
+            self.cur.execute(sql)
+            card = self.cur.fetchone()
+            print(card)
+            if card is not None:
+                sql = f'DELETE FROM cards WHERE cardId = \'{card_id}\''
+                self.cur.execute(sql)
+                self.connection.commit()
+                print(self.cur.rowcount, 'record deleted')
+                self.db.update_card_cache(card, action='DELETE')
+        except Error as e:
+            print(e)
