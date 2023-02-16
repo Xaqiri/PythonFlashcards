@@ -33,6 +33,7 @@ def deck_menu(choice, controllers):
             else:
                 choice = controllers.get('deck').update_deck_name()
         case 5:
+            controllers.get('card').delete_all_cards(controllers.get('deck').cur_deck.id)
             choice = controllers.get('deck').delete_deck(controllers.get('deck').cur_deck.id)
         case 6:
             card_id = input('Enter id of card to edit: ')

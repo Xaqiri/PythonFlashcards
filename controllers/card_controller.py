@@ -89,3 +89,14 @@ class CardController:
                 self.db.update_card_cache(card, action='DELETE')
         except Error as e:
             print(e)
+    
+    def delete_all_cards(self, deck_id):
+        self.cur.execute(f'''
+                        SELECT cardId 
+                        FROM cards 
+                        WHERE deckId = \'{deck_id}\'
+                        ''')
+        cards = self.cur.fetchall()
+        for i in cards:
+            self.delete_card(i[0])
+        print('Cards deleted')

@@ -93,6 +93,13 @@ class DeckController:
         except Error as e:
             print(e)
         
+    def delete_all_decks(self, user_id, delete_all_cards):
+        self.cur.execute(f'SELECT deckId FROM decks WHERE userId = \'{user_id}\'')
+        decks = self.cur.fetchall()
+        for i in decks:
+            delete_all_cards(i[0])
+            self.delete_deck(i[0])
+    
     def view_deck(self, name):
         try:
             self.cur.execute(f'SELECT * FROM decks WHERE name = BINARY \'{name}\'')

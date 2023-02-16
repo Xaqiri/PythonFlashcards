@@ -14,8 +14,6 @@ import os
 '''
 TODO: Split choices into two variables: choice and status
 TODO: Add study options
-TODO: Delete all decks associated with user when user is deleted
-TODO: Delete all cards associated with deck wen deck is deleted
 TODO: Update databases to add option to create and connect to a local sqlite database if a connection can not be made
 '''
 
