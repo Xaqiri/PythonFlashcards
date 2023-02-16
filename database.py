@@ -1,10 +1,13 @@
 import os
 from mysql.connector import connect, Error
+import sqlite3 
 from dotenv import load_dotenv
 import time
 class Database:
     def __init__(self):
+        self._type = None
         self._cur = None
+        self._connection = None
         self.connect()
         self.user_cache = []
         self.deck_cache = []
@@ -12,36 +15,37 @@ class Database:
         
     def connect(self):
         load_dotenv()
+        print('Connecting....')
         try:
-            print('Connecting....')
             self._connection = connect(
             host=os.environ['host'],
             port=os.environ['port'],
             user=os.environ['dbuser'],
             password=os.environ['password'],
-            database=os.environ['db']
+            database=os.environ['db'],
+            buffered=True
         )
-            self._cur = self._connection.cursor(buffered=True)
         except KeyError as e:
-            print(f'KeyError: {e} does not exist')
+            if not os.path.exists('flashcards.db'):
+                print('Database not found. Create a .env file and store your variables there if you have a cloud database you want to use')
+                print('Reverting to local database....')
+                time.sleep(0.5)
         except Error as err:
             print(err)
         
-        if self._cur is None:
-            print('Do you want to create a local database? ')
-            
+        if self._connection is None:
+            self.connect_local_db()
+        else:
+            self._type = 'mysql'
+        
         try:
-            self._cur.execute('show tables like "users"')
-            if self._cur.rowcount == 0:
-                self.make_table_users()
-            self._cur.execute('show tables like "decks"')
-            if self._cur.rowcount == 0:
-                self.make_table_decks()
-            self._cur.execute('show tables like "cards"')
-            if self._cur.rowcount == 0:
-                self.make_table_cards()
+            self._cur = self._connection.cursor()
+            self.make_tables()
         except Error as e:
             print(e)
+        except Exception:
+            print('Exiting....')
+            time.sleep(0.5)
             
     @property
     def connection(self):
@@ -55,41 +59,142 @@ class Database:
     def cur(self):
         return self._cur
     
+    @property
+    def type(self):
+        return self._type
+    
+    def connect_local_db(self):
+        if not os.path.exists('flashcards.db'):
+            inp = input('Do you want to create a local database? ')
+            if inp.casefold() != 'y':
+                print('Database not created')
+                time.sleep(0.5)
+                return
+            print('Connecting....')
+            time.sleep(0.5)
+        try:
+            self._connection = sqlite3.connect('flashcards.db')
+        except Error as e:
+            print(e)
+        self._type = 'sqlite'
+        
+    def make_tables(self):
+        print(f'Database type: {self._type}')
+        print('Checking tables....')
+        time.sleep(0.5)
+        try:
+            self.make_table_users()
+            self.make_table_decks()
+            self.make_table_cards()
+        except Error as e:
+            print(e)
+        except Exception as exc:
+            print(exc)
+            
     def make_table_users(self):
-        print('Making table users...')
-        self._cur.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-            userId varchar(50), 
-            name varchar(50) NOT NULL UNIQUE,
-            password varchar(20) NOT NULL, 
-            PRIMARY KEY (userId)
-            );'''
-        )
-    
+        if self._type == 'sqlite':    
+            sql = f'''
+                    select name
+                    from sqlite_master
+                    where name = 'users'
+                    '''
+        else: 
+            sql = 'show tables like "users"'
+        try:
+            self._cur.execute(sql)
+            if self._type == 'mysql':
+                exists = self._cur.rowcount != 0
+            else:
+                exists = len(self._cur.fetchall()) != 0
+            if not exists:
+                print('Making table users...')
+                time.sleep(0.5)
+                self._cur.execute('''
+                                CREATE TABLE IF NOT EXISTS users (
+                                userId varchar(50), 
+                                name varchar(50) NOT NULL UNIQUE,
+                                password varchar(20) NOT NULL, 
+                                PRIMARY KEY (userId)
+                                );'''
+                            )
+            else:
+                print('Found users....')
+                time.sleep(0.2)
+        except Error as e:
+            print(e)
+        except Exception as exc:
+            print(exc)
+            
     def make_table_decks(self):
-        print('Making table decks...')
-        self._cur.execute('''
-            CREATE TABLE IF NOT EXISTS decks (
-            deckId varchar(50), 
-            name varchar(20) NOT NULL,
-            userId varchar(50), 
-            PRIMARY KEY (deckId), 
-            FOREIGN KEY (userId) REFERENCES users (userId)
-            );'''
-        )
-    
+        if self._type == 'sqlite':    
+            sql = f'''
+                    select name
+                    from sqlite_master
+                    where name = 'decks'
+                    '''
+        else: 
+            sql = 'show tables like "decks"'
+        try:
+            self._cur.execute(sql)
+            if self._type == 'mysql':
+                exists = self._cur.rowcount != 0
+            else:
+                exists = len(self._cur.fetchall()) != 0
+            if not exists:
+                print('Making table decks...')
+                time.sleep(0.5)
+                self._cur.execute('''
+                                CREATE TABLE IF NOT EXISTS decks (
+                                deckId varchar(50), 
+                                name varchar(20) NOT NULL,
+                                userId varchar(50), 
+                                PRIMARY KEY (deckId), 
+                                FOREIGN KEY (userId) REFERENCES users (userId)
+                                );'''
+                            )
+            else:
+                print('Found decks....')
+                time.sleep(0.2)
+        except Error as e:
+            print(e)
+        except Exception as exc:
+            print(exc)
+        
     def make_table_cards(self):
-        print('Making table cards...')
-        self._cur.execute('''
-            CREATE TABLE IF NOT EXISTS cards (
-            cardId varchar(50), 
-            front varchar(20) NOT NULL, 
-            back varchar(20) NOT NULL, 
-            deckId varchar(50), 
-            PRIMARY KEY (cardId), 
-            FOREIGN KEY (deckId) REFERENCES decks (deckId)
-            );'''
-        )
+        if self._type == 'sqlite':    
+            sql = f'''
+                    select name
+                    from sqlite_master
+                    where name = 'cards'
+                    '''
+        else: 
+            sql = 'show tables like "cards"'
+        try:
+            self._cur.execute(sql)
+            if self._type == 'mysql':
+                exists = self._cur.rowcount != 0
+            else:
+                exists = len(self._cur.fetchall()) != 0
+            if not exists:
+                print('Making table cards...')
+                time.sleep(0.5)
+                self._cur.execute('''
+                                CREATE TABLE IF NOT EXISTS cards (
+                                cardId varchar(50), 
+                                front varchar(20) NOT NULL, 
+                                back varchar(20) NOT NULL, 
+                                deckId varchar(50), 
+                                PRIMARY KEY (cardId), 
+                                FOREIGN KEY (deckId) REFERENCES decks (deckId)
+                                );'''
+                            )
+            else:
+                print('Found cards....')
+                time.sleep(0.2)
+        except Error as e:
+            print(e)
+        except Exception as exc:
+            print(exc)
         
     def update_user_cache(self, user, new_name=None, action=None):
         index = None

@@ -30,9 +30,8 @@ class CardController:
         new_card = Card(front, back, deck_id)
         print(f'{new_card.id}, {new_card.front}, {new_card.back}, {new_card.deck_id}')
         try:
-            sql = 'INSERT INTO cards (cardId, front, back, deckId) VALUES (%s, %s, %s, %s)'
-            val = (new_card.id, front, back, deck_id)
-            self.cur.execute(sql, val)
+            sql = f'INSERT INTO cards (cardId, front, back, deckId) VALUES (\'{new_card.id}\', \'{new_card.front}\', \'{new_card.back}\', \'{new_card.deck_id}\')'
+            self.cur.execute(sql)
             self.connection.commit()
             self.db.card_cache += [(new_card.id, new_card.front, new_card.back)]
         except Error as e:
@@ -70,8 +69,9 @@ class CardController:
                 self.connection.commit()
                 print(self.cur.rowcount, 'record updated')
                 self.db.update_card_cache(old_card, new_front=front, new_back=back, action='PUTS')
+                return 13
             else:
-                print('Oops')
+                return -10
         except Error as e:
             print(e)
             
@@ -87,6 +87,8 @@ class CardController:
                 self.connection.commit()
                 print(self.cur.rowcount, 'record deleted')
                 self.db.update_card_cache(card, action='DELETE')
+                return -11
+            return -12
         except Error as e:
             print(e)
     

@@ -3,6 +3,9 @@
 '''
 
 choices = {
+    -12: 'card_does_not_exist',
+    -11: 'card_deleted',
+    -10: 'card_not_updated',
     -9: 'deck_not_found',
     -8: 'deck_deleted',
     -7: 'user_deleted',
@@ -24,7 +27,8 @@ choices = {
     9: 'user_name_updated',
     10: 'deck_found',
     11: 'card_created',
-    12: 'display_cards'
+    12: 'display_cards',
+    13: 'card_updated'
 }
 
 # choices2 = {

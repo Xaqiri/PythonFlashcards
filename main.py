@@ -14,11 +14,18 @@ import os
 '''
 TODO: Split choices into two variables: choice and status
 TODO: Add study options
-TODO: Update databases to add option to create and connect to a local sqlite database if a connection can not be made
+TODO: Add comments
+TODO: Make the ui prettier
+TODO: Encrypt passwords before saving to the database
+TODO: Pull all of the sql queries out of the files they're in now and put them in globals, probably as a dict
+TODO: Might be a good idea to put the controllers there too
+BUG: Creating any entity before querying the database 
+     prevents the cache from populating with the rest of the items on the database
+BUG: Editing user name or deck name after creation allows you to bypass the unique constraint
+     This only affects the cache for user name, but changes the deck name in the database as well
 '''
 
 
-        
 def main():
     done = False
     choice = None
@@ -33,7 +40,6 @@ def main():
         }
     
     while not done:
-        os.system('clear')
         if choice is not None:
             display_message(choice, db)
             if type(choice) != int: 
@@ -49,6 +55,7 @@ def main():
             choice = user_menu(controllers)
         else:
             choice = main_menu(controllers)
+        os.system('clear')
     db.close()
             
 main()

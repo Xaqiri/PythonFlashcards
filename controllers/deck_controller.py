@@ -32,14 +32,31 @@ class DeckController:
         new_deck = Deck(deck_name, self._cur_user.id)
         try:
             print(f'{new_deck.id}, {new_deck.deck_name}, {new_deck.user_id}')
-            self.cur.execute(f'INSERT INTO decks (deckId, name, userId) SELECT \'{new_deck.id}\' as deckId, \'{new_deck.deck_name}\' as name, \'{new_deck.user_id}\' as userId FROM decks WHERE (name=\'{new_deck.deck_name}\' and userId=\'{new_deck.user_id}\') HAVING COUNT(*) = 0')
-            self.connection.commit()
-            print(self.cur.rowcount, "record inserted")
-            self.db.deck_cache += [(new_deck.id, new_deck.deck_name)]
-            return 5 if self.cur.rowcount == 1 else -5
+            self.cur.execute(f'''
+            select * from decks
+            where
+            name = (select name from decks where name = \'{new_deck.deck_name}\') and
+            userId = (select userId from users where userId = \'{new_deck.user_id}\')
+            ''')
+            row = len(self.cur.fetchall()) if self.db.type == 'sqlite' else self.cur.rowcount
+            if row == 0:
+                self.cur.execute(
+                    f'''
+                    INSERT INTO decks (deckId, name, userId)
+                    VALUES (\'{new_deck.id}\', \'{new_deck.deck_name}\', \'{new_deck.user_id}\')             
+                    ''')
+                self.connection.commit()
+                print(self.cur.rowcount, "record inserted")
+                self.db.deck_cache += [(new_deck.id, new_deck.deck_name)]
+                return 5
+            else:
+                return -5
         except Error as e:
             print(e)
+            time.sleep(0.5)
             return -5
+        except Exception as exc:
+            print(exc)
 
     def display_decks(self):
         self._cur_deck = None
@@ -102,7 +119,7 @@ class DeckController:
     
     def view_deck(self, name):
         try:
-            self.cur.execute(f'SELECT * FROM decks WHERE name = BINARY \'{name}\'')
+            self.cur.execute(f'SELECT * FROM decks WHERE name = \'{name}\'')
             row = self.cur.fetchone()
             if row is not None:
                 self._cur_deck = Deck(deck_id=row[0], deck_name=row[1], user_id=row[2])
@@ -117,3 +134,19 @@ class DeckController:
         self._cur_deck = None
         self.db.card_cache = []
         
+# Copied from stackover. Saving because I don't understand it
+# Replaced with 2 queries I wrote, first to check if an item exists
+# and second to insert the item into the table if the previous conditions are false
+# self.cur.execute(f'
+#   INSERT INTO decks (deckId, name, userId) 
+#   SELECT \'{new_deck.id}\' as deckId, \'{new_deck.deck_name}\' as name, \'{new_deck.user_id}\' as userId 
+#   FROM decks 
+#   WHERE (name=\'{new_deck.deck_name}\' and userId=\'{new_deck.user_id}\') 
+#   HAVING COUNT(*) = 0')
+            
+# self.cur.execute(f'''
+            # select * from decks
+            # where
+            # name = (select name from decks where name = \'{new_deck.deck_name}\') and
+            # userId = (select userId from users where userId = \'{new_deck.user_id}\')
+            # ''')

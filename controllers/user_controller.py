@@ -26,15 +26,15 @@ class UserController:
         
     def create_new_user(self):
         new_user = self.get_user_info()
-        sql = "INSERT INTO users (userId, name, password) VALUES (%s, %s, %s)"
-        val = (new_user.id, new_user.user_name, new_user.password)
+        sql = f"INSERT INTO users (userId, name, password) VALUES (\'{new_user.id}\', \'{new_user.user_name}\', \'{new_user.password}\')"
         try:
-            self.cur.execute(sql, val)
+            self.cur.execute(sql)
             self.connection.commit()
             print(self.cur.rowcount, "record inserted")
             self.db.user_cache += [(new_user.id, new_user.user_name)]
             return 1
         except Error as e:
+            print(e)
             return -4
         
     def display_users(self):
@@ -57,7 +57,7 @@ class UserController:
             else:
                 self.db.update_user_cache(self._cur_user, new_name, action='PUTS')
                 self._cur_user.user_name = new_name
-                self.cur.execute(f'UPDATE users SET users.name = \'{new_name}\' WHERE users.userId = \'{self._cur_user.id}\'')
+                self.cur.execute(f'UPDATE users SET name = \'{new_name}\' WHERE userId = \'{self._cur_user.id}\'')
                 self.connection.commit()
                 self._cur_user.user_name = new_name
                 return 9
@@ -77,7 +77,7 @@ class UserController:
     def sign_in(self):
         check_user = self.get_user_info()
         try:
-            self.cur.execute(f'SELECT userId, name, password FROM users WHERE name = BINARY \'{check_user.user_name}\'')
+            self.cur.execute(f'SELECT userId, name, password FROM users WHERE name = \'{check_user.user_name}\'')
             row = self.cur.fetchone()
         except Error as e:
             print(e)

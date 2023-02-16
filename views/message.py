@@ -33,6 +33,16 @@ def display_message(choice, db):
             print('Deck name updated ')
         case 'user_name_updated':
             print('User name updated')
+        case 'card_created':
+            print('Card created')
+        case 'card_updated':
+            print('Card updated')
+        case 'card_not_updated':
+            print('Card failed to update')
+        case 'card_deleted':
+            print('Card deleted')
+        case 'card_does_not_exist':
+            print('Card does not exist')
         case 'display_users':
             [print(i) for i in db.user_cache]
         case 'display_decks':

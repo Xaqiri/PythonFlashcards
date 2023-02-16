@@ -25,7 +25,7 @@ def deck_menu(choice, controllers):
         case 2:
             choice = controllers.get('card').display_cards()
         case 3:
-            pass
+            choice = 0
         case 4:
             if not controllers.get('deck').cur_deck:
                 inp = input('Enter deck name: ')
@@ -42,7 +42,7 @@ def deck_menu(choice, controllers):
             choice = controllers.get('card').update_card(card_id, front, back)
         case 7:
             card_id = input('Enter id of card to delete: ')
-            controllers.get('card').delete_card(card_id)
+            choice = controllers.get('card').delete_card(card_id)
         case 0:
             controllers.get('deck').exit_deck()
             choice = None
