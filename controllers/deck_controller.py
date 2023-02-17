@@ -134,7 +134,7 @@ class DeckController:
         self._cur_deck = None
         self.db.card_cache = []
         
-# Copied from stackover. Saving because I don't understand it
+# Copied from stackoverflow. Saving because I don't understand it
 # Replaced with 2 queries I wrote, first to check if an item exists
 # and second to insert the item into the table if the previous conditions are false
 # self.cur.execute(f'

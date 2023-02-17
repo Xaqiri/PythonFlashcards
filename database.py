@@ -14,6 +14,11 @@ class Database:
         self.card_cache = []
         
     def connect(self):
+        ''' 
+        Connects to the database. Attempts to connect to the db
+        with the parameters defined in .env first, and creates a 
+        local sqlite db as a fallback
+        '''
         load_dotenv()
         print('Connecting....')
         try:
@@ -26,6 +31,7 @@ class Database:
             buffered=True
         )
         except KeyError as e:
+            # Raises an error if the proper variables aren't in .env
             if not os.path.exists('flashcards.db'):
                 print('Database not found. Create a .env file and store your variables there if you have a cloud database you want to use')
                 print('Reverting to local database....')
@@ -64,6 +70,10 @@ class Database:
         return self._type
     
     def connect_local_db(self):
+        ''' 
+            Connects to the local sqlite database
+            and creates one if it doesn't exist
+        '''
         if not os.path.exists('flashcards.db'):
             inp = input('Do you want to create a local database? ')
             if inp.casefold() != 'y':
@@ -79,6 +89,12 @@ class Database:
         self._type = 'sqlite'
         
     def make_tables(self):
+        ''' 
+        Creates the database tables: 
+        users: userId, name, password
+        decks: deckId, name, userId
+        flashcards: cardId, front, back, deckId
+        '''
         print(f'Database type: {self._type}')
         print('Checking tables....')
         time.sleep(0.5)
@@ -92,6 +108,7 @@ class Database:
             print(exc)
             
     def make_table_users(self):
+        ''' Create users table if it doesn't exist '''
         if self._type == 'sqlite':    
             sql = f'''
                     select name
@@ -126,6 +143,7 @@ class Database:
             print(exc)
             
     def make_table_decks(self):
+        ''' Create decks table if it doesn't exist '''
         if self._type == 'sqlite':    
             sql = f'''
                     select name
@@ -161,6 +179,7 @@ class Database:
             print(exc)
         
     def make_table_cards(self):
+        ''' Create cards table if it doesn't exist '''
         if self._type == 'sqlite':    
             sql = f'''
                     select name
@@ -197,6 +216,10 @@ class Database:
             print(exc)
         
     def update_user_cache(self, user, new_name=None, action=None):
+        ''' 
+        Updates the local database cache 
+        to reduce calls to the database 
+        '''
         index = None
         for i in self.user_cache:
             if i[1] == user.user_name:
@@ -208,6 +231,10 @@ class Database:
                 self.user_cache.pop(index)
         
     def update_deck_cache(self, deck, new_name=None, action=None):
+        ''' 
+        Updates the local database cache 
+        to reduce calls to the database 
+        '''
         index = None
         for i in self.deck_cache:
             if i[1] == deck.deck_name:
@@ -219,6 +246,10 @@ class Database:
                 self.deck_cache.pop(index)
         
     def update_card_cache(self, card, new_front=None, new_back=None, action=None):
+        ''' 
+        Updates the local database cache 
+        to reduce calls to the database 
+        '''
         index = None
         for i in self.card_cache:
             if i[0] == card[0]:
@@ -230,5 +261,6 @@ class Database:
                 self.card_cache.pop(index)
 
     def close(self):
+        ''' Close the connection '''
         if self._connection is not None:
             self._connection.close()
