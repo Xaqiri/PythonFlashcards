@@ -92,7 +92,6 @@ class DeckController:
             return 'deck_not_found'
     
     def delete_deck(self):
-        print(self._cur_deck.id)
         deckId = self._cur_deck.id if self._cur_deck else input('Deck id: ') 
         try:
             self.cur.execute(f'SELECT deckId, name, userId FROM decks WHERE deckId = \'{deckId}\'')
@@ -105,7 +104,7 @@ class DeckController:
                     self.connection.commit()
                     self.db.update_deck_cache(Deck(deck_id=deck[0], deck_name=deck[1], user_id=deck[2]), action='DELETE')
                     self._cur_deck = None
-                    print(self.cur.rowcount, 'record deleted')
+                    print(f'deck {deckId} deleted')
                     return 'deck_deleted'
             else:
                 return 'deck_not_found'
@@ -114,12 +113,17 @@ class DeckController:
         except Error as e:
             print(e)
         
-    def delete_all_decks(self, user_id, delete_all_cards):
-        self.cur.execute(f'SELECT deckId FROM decks WHERE userId = \'{user_id}\'')
-        decks = self.cur.fetchall()
-        for i in decks:
-            delete_all_cards(i[0])
-            self.delete_deck(i[0])
+    def delete_all_deck(self, user_id, card_controller):
+        try:
+            self.cur.execute(f'SELECT deckId FROM decks WHERE userId = \'{user_id}\'')
+            decks = self.cur.fetchall()
+            for i in decks:
+                card_controller.delete_all_card(i[0])
+                self._cur_deck = Deck(deck_id=i[0], deck_name=None, user_id=None)
+                self.delete_deck()
+                time.sleep(0.2)
+        except Error as e:
+            print(e)
     
     def view_deck(self, card):
         name = input('Deck name: ')

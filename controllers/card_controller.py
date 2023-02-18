@@ -76,11 +76,11 @@ class CardController:
                 self.db.update_card_cache(old_card, new_front=front, new_back=back, action='PUTS')
                 return 'card_updated'
             else:
-                return 'card_not_deleted'
+                return 'card_not_updated'
         except Error as e:
             print(e)
             
-    def delete_card(self, card_id):
+    def delete_card(self, card_id, num=1):
         try:
             sql = f'SELECT * FROM cards WHERE cardId = \'{card_id}\''
             self.cur.execute(sql)
@@ -89,20 +89,25 @@ class CardController:
                 sql = f'DELETE FROM cards WHERE cardId = \'{card_id}\''
                 self.cur.execute(sql)
                 self.connection.commit()
-                print(self.cur.rowcount, 'record deleted')
+                if num == 1:
+                    print(f'card {card_id} deleted')
                 self.db.update_card_cache(card, action='DELETE')
                 return 'card_deleted'
             return 'card_not_deleted'
         except Error as e:
             print(e)
     
-    def delete_all_cards(self, deck_id):
-        self.cur.execute(f'''
-                        SELECT cardId 
-                        FROM cards 
-                        WHERE deckId = \'{deck_id}\'
-                        ''')
-        cards = self.cur.fetchall()
-        for i in cards:
-            self.delete_card(i[0])
-        print('Cards deleted')
+    def delete_all_card(self, deck_id):
+        try:
+            self.cur.execute(f'''
+                            SELECT cardId 
+                            FROM cards 
+                            WHERE deckId = \'{deck_id}\'
+                            ''')
+            cards = self.cur.fetchall()
+            for i in cards:
+                self.delete_card(i[0], len(cards))
+            print(f'{len(cards)} cards deleted')
+            time.sleep(0.2)
+        except Error as e:
+            print(e)

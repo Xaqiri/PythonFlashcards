@@ -1,13 +1,9 @@
-from globals import *
 import unittest
-# import main
-from mock_files import mock_display_message, mock_user_menu
 from views import main_menu, user_menu, deck_menu
 from controllers.user_controller import UserController
 from controllers.deck_controller import DeckController
 from controllers.card_controller import CardController
 
-# STATUS_CODES = status_codes.StatusCodes()
 class TestCalc(unittest.TestCase):
     
     # def test_not_found(self):
@@ -37,17 +33,17 @@ class TestCalc(unittest.TestCase):
         # self.assertEqual(status, 'not_number') # check choice is string
         
         status = main_menu.handle_choice(0)
-        self.assertEqual(status, 'exit_user')
+        self.assertEqual(status, 'exit')
         status = main_menu.handle_choice(1)
         self.assertEqual(status, 'create_user')
         status = main_menu.handle_choice(2)
-        self.assertEqual(status, 'use_user')
+        self.assertEqual(status, 'sign_in')
         status = main_menu.handle_choice(3)
         self.assertEqual(status, 'display_all_user')
         
     def test_user_menu(self):
         status = user_menu.handle_choice(0)
-        self.assertEqual(status, 'exit_deck')
+        self.assertEqual(status, 'exit_user')
         status = user_menu.handle_choice(1)
         self.assertEqual(status, 'create_deck')
         status = user_menu.handle_choice(2)

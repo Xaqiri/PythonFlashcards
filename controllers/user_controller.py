@@ -1,6 +1,6 @@
 from models.user import User 
 from mysql.connector import Error
-from sqlite3 import Error
+from sqlite3 import Error as sqlite_error
 import time
 
 class UserController:
@@ -66,17 +66,26 @@ class UserController:
         except Error as e:
             print(e)
             
-    def delete_user(self):
+    def delete_user(self, deck_controller, card_controller):
         choice = input('Are you sure? y/n ').casefold()
         if choice == 'y':
             try:
+                deck_controller.delete_all_deck(deck_controller.cur_user.id, card_controller)
                 self.cur.execute(f'DELETE FROM users WHERE userId = \'{self._cur_user.id}\'')
                 self.connection.commit()
                 self.db.update_user_cache(self._cur_user, action='DELETE')
                 self._cur_user = None
+                # print('Deleting cards....')
+                # time.sleep(0.2)
+                # print('Deleting decks....')
+                # time.sleep(0.2)
+                # print('Deleting users....')
+                # time.sleep(0.2)
                 return 'user_deleted'
             except Error as e:
                 print(e)
+            except sqlite_error as err:
+                print(err)
     
     def sign_in(self, deck):
         check_user = self.get_user_info()

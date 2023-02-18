@@ -1,3 +1,5 @@
+from models import user, deck, card
+
 import os
 from mysql.connector import connect, Error
 import sqlite3 
@@ -103,6 +105,9 @@ class Database:
             self.make_table_users()
             self.make_table_decks()
             self.make_table_cards()
+            inp = input('Populate with test data? y/n ')
+            if inp == 'y':
+                self.test_data()
         except Error as e:
             print(e)
         except Exception as exc:
@@ -267,3 +272,51 @@ class Database:
         ''' Close the connection '''
         if self._connection is not None:
             self._connection.close()
+            
+    def test_data(self):
+        print('Creating test data....')
+        new_user = user.User('test_user', 'password')
+        sql = f"INSERT INTO users (userId, name, password) VALUES (\'{new_user.id}\', \'{new_user.user_name}\', \'{new_user.password}\')"
+        try:
+            self.cur.execute(sql)
+            self.connection.commit()
+            print(self.cur.rowcount, "user inserted")
+            for i in range(5):
+                new_deck = deck.Deck(f'test{i}', new_user.id)
+                try:
+                    self.cur.execute(f'''
+                    select * from decks
+                    where
+                    name = (select name from decks where name = \'{new_deck.deck_name}\') and
+                    userId = (select userId from users where userId = \'{new_deck.user_id}\')
+                    ''')
+                    row = len(self.cur.fetchall()) if self.type == 'sqlite' else self.cur.rowcount
+                    if row == 0:
+                        self.cur.execute(
+                            f'''
+                            INSERT INTO decks (deckId, name, userId)
+                            VALUES (\'{new_deck.id}\', \'{new_deck.deck_name}\', \'{new_deck.user_id}\')             
+                            ''')
+                        self.connection.commit()
+                        # self.deck_cache += [(new_deck.id, new_deck.deck_name)]
+                    else:
+                        print('deck_found')
+                
+                except Exception as exc:
+                    print(exc)
+                for i in range(10):
+                    new_card = card.Card(f'front{i}', f'back{i}', new_deck.id)
+                    try:
+                        sql = f'INSERT INTO cards (cardId, front, back, deckId) VALUES (\'{new_card.id}\', \'{new_card.front}\', \'{new_card.back}\', \'{new_card.deck_id}\')'
+                        self.cur.execute(sql)
+                        self.connection.commit()
+                        # self.card_cache += [(new_card.id, new_card.front, new_card.back)]
+                    except Error as e:
+                        print(e)
+            print('50 cards inserted')
+            print("5 decks inserted")
+        except Exception as e:
+            print('Test data already exists')
+            
+        
+                

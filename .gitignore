@@ -132,3 +132,4 @@ dmypy.json
 mock_files/
 *.swp
 .vscode
+*.sql
