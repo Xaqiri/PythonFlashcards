@@ -1,6 +1,5 @@
 '''
 TODO: Add study options
-TODO: Add comments
 TODO: Make the ui prettier
 TODO: Encrypt passwords before saving to the database
 TODO: Pull all of the sql queries out of the files they're in now and put them in globals, probably as a dict
@@ -24,9 +23,9 @@ import os
 
 
 def main():
-    done = False
-    status = None
-    DB = Database()
+    done: bool = False
+    status: str = None
+    DB: Database = Database()
     if DB.connection is None:
         done = True
     else:

@@ -33,7 +33,6 @@ class Database:
             buffered=True
         )
         except KeyError as e:
-            # Raises an error if the proper variables aren't in .env
             if not os.path.exists('flashcards.db'):
                 print('Database not found. Create a .env file and store your variables there if you have a cloud database you want to use')
                 print('Reverting to local database....')

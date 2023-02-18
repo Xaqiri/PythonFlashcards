@@ -1,5 +1,14 @@
 
-def handle_status(status, controllers):
+def handle_status(status: str, controllers: dict[str, ]) -> str:
+    """Intermediary function to handle action statuses
+
+    Args:
+        status (str): Status indicating what action needs to be taken
+        controllers (dict[str]): Contains the three controllers
+
+    Returns:
+        str: Status indicating success or failure
+    """
     match status:
         case 'create_user': return controllers.get('user').create_user()
         case 'create_deck': return controllers.get('deck').create_deck()

@@ -1,5 +1,6 @@
 
 def deck_menu():
+    ''' Display options and get user input '''
     print('1. Create new card')
     print('2. Display cards')
     print('3. Review deck')
@@ -8,8 +9,13 @@ def deck_menu():
     print('6. Update card')
     print('7. Delete card')
     print('0. Back')
+    choice = int(input())
+    return handle_choice(choice)
+    
+    
+def handle_choice(choice: int) -> str:
+    ''' Returns a status based on the user input '''
     try:
-        choice = int(input())
         if choice not in range(8):
            return 'invalid_choice'
     except:

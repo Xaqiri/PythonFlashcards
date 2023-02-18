@@ -1,3 +1,4 @@
+from controllers.deck_controller import DeckController
 from models.user import User 
 from mysql.connector import Error
 from sqlite3 import Error as sqlite_error
@@ -19,13 +20,19 @@ class UserController:
     def cur_user(self, cur_user):
         self._cur_user = cur_user
     
-    def get_user_info(self):
+    def get_user_info(self) -> User:
+        ''' Helper function to get input '''
         name = input('Username: ')
         password = input('Password: ')
         user = User(name, password)
         return user
         
-    def create_user(self):
+    def create_user(self) -> str:
+        """Creates a new user and saves it to the database
+
+        Returns:
+            str: Status indicating success or failre
+        """
         new_user = self.get_user_info()
         sql = f"INSERT INTO users (userId, name, password) VALUES (\'{new_user.id}\', \'{new_user.user_name}\', \'{new_user.password}\')"
         try:
@@ -40,6 +47,8 @@ class UserController:
             return 'user_found'
         
     def display_users(self):
+        """Displays all users in the database
+        """
         try:
             if len(self.db.user_cache) == 0:
                 print('Connecting to database....')
@@ -51,7 +60,12 @@ class UserController:
             print(e)
         [print(i) for i in self.db.user_cache]
             
-    def update_user_name(self):
+    def update_user_name(self) -> str:
+        """Updates the active user's name and saves it to the database
+
+        Returns:
+            str: Status indication success or failure
+        """
         try:
             new_name = input('Enter new username: ')
             if len(new_name) == 0:
@@ -66,7 +80,16 @@ class UserController:
         except Error as e:
             print(e)
             
-    def delete_user(self, deck_controller, card_controller):
+    def delete_user(self, deck_controller, card_controller) -> str:
+        """Deletes a user from the database if it exists
+
+        Args:
+            deck_controller (DeckController): Controller that handles deck operations
+            card_controller (CardController): Controller that handles card operations
+
+        Returns:
+            str: Status indicating success or failure
+        """
         choice = input('Are you sure? y/n ').casefold()
         if choice == 'y':
             try:
@@ -75,19 +98,21 @@ class UserController:
                 self.connection.commit()
                 self.db.update_user_cache(self._cur_user, action='DELETE')
                 self._cur_user = None
-                # print('Deleting cards....')
-                # time.sleep(0.2)
-                # print('Deleting decks....')
-                # time.sleep(0.2)
-                # print('Deleting users....')
-                # time.sleep(0.2)
                 return 'user_deleted'
             except Error as e:
                 print(e)
             except sqlite_error as err:
                 print(err)
     
-    def sign_in(self, deck):
+    def sign_in(self, deck) -> str:
+        """Sign in to a user if it exists in the database and the password is correct
+
+        Args:
+            deck (DeckController): Controller that handles deck operations
+
+        Returns:
+            str: Status indicating success or failure
+        """
         check_user = self.get_user_info()
         try:
             self.cur.execute(f'SELECT userId, name, password FROM users WHERE name = \'{check_user.user_name}\'')
@@ -105,7 +130,12 @@ class UserController:
                 deck.cur_user = self._cur_user
                 return 'use_user'
 
-    def sign_out(self, deck):
+    def sign_out(self, deck: DeckController):
+        """Signs out of the current user and clears the cache
+
+        Args:
+            deck (DeckController): Controller that handles deck operations
+        """
         self._cur_user = None
         deck.cur_deck = None
         self.db.deck_cache = []

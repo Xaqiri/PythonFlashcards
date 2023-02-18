@@ -1,6 +1,10 @@
 
-def display_message(status):
-    
+def display_message(status: str):
+    """Displays a message based on the status passed in
+
+    Args:
+        status (str): Status indicating success or failure
+    """
     match status:
         case 'not_number': print('Choice must be a number')
         case 'invalid_choice': print('Invalid choice')
