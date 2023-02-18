@@ -84,6 +84,7 @@ class Database:
             time.sleep(0.5)
         try:
             self._connection = sqlite3.connect('flashcards.db')
+            self._connection.execute('pragma foreign_keys = on')
         except Error as e:
             print(e)
         self._type = 'sqlite'
@@ -168,6 +169,7 @@ class Database:
                                 userId varchar(50), 
                                 PRIMARY KEY (deckId), 
                                 FOREIGN KEY (userId) REFERENCES users (userId)
+                                ON DELETE CASCADE
                                 );'''
                             )
             else:
@@ -205,6 +207,7 @@ class Database:
                                 deckId varchar(50), 
                                 PRIMARY KEY (cardId), 
                                 FOREIGN KEY (deckId) REFERENCES decks (deckId)
+                                ON DELETE CASCADE
                                 );'''
                             )
             else:

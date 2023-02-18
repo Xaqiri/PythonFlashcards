@@ -6,7 +6,6 @@ from views import main_menu, user_menu, deck_menu
 from controllers.user_controller import UserController
 from controllers.deck_controller import DeckController
 from controllers.card_controller import CardController
-import status_codes
 
 # STATUS_CODES = status_codes.StatusCodes()
 class TestCalc(unittest.TestCase):

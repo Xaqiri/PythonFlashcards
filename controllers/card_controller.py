@@ -1,5 +1,6 @@
 from models.card import Card
 from mysql.connector import Error
+from sqlite3 import Error
 import time 
 
 class CardController:
@@ -26,9 +27,10 @@ class CardController:
     def cur_deck(self, cur_deck):
         self._cur_deck = cur_deck
     
-    def create_card(self, front, back, deck_id):
-        new_card = Card(front, back, deck_id)
-        print(f'{new_card.id}, {new_card.front}, {new_card.back}, {new_card.deck_id}')
+    def create_card(self):
+        front = input('Front: ')
+        back = input('Back: ')
+        new_card = Card(front, back, self._cur_deck.id)
         try:
             sql = f'INSERT INTO cards (cardId, front, back, deckId) VALUES (\'{new_card.id}\', \'{new_card.front}\', \'{new_card.back}\', \'{new_card.deck_id}\')'
             self.cur.execute(sql)
@@ -37,7 +39,7 @@ class CardController:
         except Error as e:
             print(e)
         print(self.cur.rowcount, "record inserted")
-        return 11
+        return 'card_created'
     
     def display_cards(self):
         try:
@@ -49,15 +51,18 @@ class CardController:
                 time.sleep(0.5)
         except Error as e:
             print(e)
-        return 12
+        [print(i) for i in self.db.card_cache]
     
-    def update_card(self, card_id, front=None, back=None):
+    def update_card(self):
+        card_id = input('Enter id of card to edit: ')
+        front = input('Enter front of card: ')
+        back = input('Enter back of card: ')
+        
         try:
             sql = f'SELECT cardId, front, back FROM cards WHERE cardId = \'{card_id}\''
             self.cur.execute(sql)
             old_card = self.cur.fetchone()
             if old_card is not None:
-                print(old_card)
                 front = old_card.front if front is None else front
                 back = old_card.back if back is None else back
                 sql = f'''
@@ -69,9 +74,9 @@ class CardController:
                 self.connection.commit()
                 print(self.cur.rowcount, 'record updated')
                 self.db.update_card_cache(old_card, new_front=front, new_back=back, action='PUTS')
-                return 13
+                return 'card_updated'
             else:
-                return -10
+                return 'card_not_deleted'
         except Error as e:
             print(e)
             
@@ -80,15 +85,14 @@ class CardController:
             sql = f'SELECT * FROM cards WHERE cardId = \'{card_id}\''
             self.cur.execute(sql)
             card = self.cur.fetchone()
-            print(card)
             if card is not None:
                 sql = f'DELETE FROM cards WHERE cardId = \'{card_id}\''
                 self.cur.execute(sql)
                 self.connection.commit()
                 print(self.cur.rowcount, 'record deleted')
                 self.db.update_card_cache(card, action='DELETE')
-                return -11
-            return -12
+                return 'card_deleted'
+            return 'card_not_deleted'
         except Error as e:
             print(e)
     

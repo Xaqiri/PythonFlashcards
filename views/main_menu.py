@@ -1,13 +1,4 @@
-# from globals import *
 
-STATUS_CODES = {
-    'not_number': 'not_number',
-    'invalid': 'invalid_choice',
-    'exit': 'exit_user',
-    'create': 'create_user',
-    'sign_in': 'use_user',
-    'display_all': 'display_all_user'
-}
 def main_menu():
     print('1. Create new user')
     print('2. Sign in')
@@ -16,17 +7,17 @@ def main_menu():
     try:
         choice = int(input())
     except:
-        return STATUS_CODES.get('not_number')
+        return 'not_number'
     return handle_choice(choice)
     
 def handle_choice(choice):
     try:
         if choice not in range(4):
-            return STATUS_CODES.get('invalid')
+            return 'invalid_choice'
     except:
-        return STATUS_CODES.get('not_number')
+        return 'not_number'
     match choice:
-        case 0: return STATUS_CODES.get('exit')
-        case 1: return STATUS_CODES.get('create')
-        case 2: return STATUS_CODES.get('sign_in')
-        case 3: return STATUS_CODES.get('display_all')
+        case 0: return 'exit'
+        case 1: return 'create_user'
+        case 2: return 'sign_in'
+        case 3: return 'display_all_user'

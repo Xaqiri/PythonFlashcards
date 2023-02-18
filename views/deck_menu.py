@@ -1,6 +1,5 @@
-from globals import *
 
-def deck_menu(choice, controllers):
+def deck_menu():
     print('1. Create new card')
     print('2. Display cards')
     print('3. Review deck')
@@ -11,39 +10,18 @@ def deck_menu(choice, controllers):
     print('0. Back')
     try:
         choice = int(input())
-        if choice not in choices.keys() or choice < 0 or choice > 7:
-            choice = 0
-            return choice
+        if choice not in range(8):
+           return 'invalid_choice'
     except:
-        choice = -1
+        return 'not_number'
     
     match choice:
-        case 1:
-            front = input('Enter card front: ')
-            back = input('Enter card back: ')
-            choice = controllers.get('card').create_card(front, back, controllers.get('deck').cur_deck.id)
-        case 2:
-            choice = controllers.get('card').display_cards()
-        case 3:
-            choice = 0
-        case 4:
-            if not controllers.get('deck').cur_deck:
-                inp = input('Enter deck name: ')
-                choice = controllers.get('deck').update_deck_name(inp)
-            else:
-                choice = controllers.get('deck').update_deck_name()
-        case 5:
-            controllers.get('card').delete_all_cards(controllers.get('deck').cur_deck.id)
-            choice = controllers.get('deck').delete_deck(controllers.get('deck').cur_deck.id)
-        case 6:
-            card_id = input('Enter id of card to edit: ')
-            front = input('Enter front of card: ')
-            back = input('Enter back of card: ')
-            choice = controllers.get('card').update_card(card_id, front, back)
-        case 7:
-            card_id = input('Enter id of card to delete: ')
-            choice = controllers.get('card').delete_card(card_id)
-        case 0:
-            controllers.get('deck').exit_deck()
-            choice = None
-    return choice
+        case 1: return 'create_card'
+        case 2: return 'display_all_card'
+        case 3: return 'review_deck'
+        case 4: return 'update_deck'
+        case 5: return 'delete_deck'
+        case 6: return 'update_card'
+        case 7: return 'delete_card'
+        case 0: return 'exit_deck'
+        

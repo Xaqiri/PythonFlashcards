@@ -1,5 +1,6 @@
 from models.deck import Deck 
 from mysql.connector import Error
+from sqlite3 import Error
 import time
 
 class DeckController:
@@ -31,7 +32,6 @@ class DeckController:
         deck_name = input('Deck name: ')
         new_deck = Deck(deck_name, self._cur_user.id)
         try:
-            print(f'{new_deck.id}, {new_deck.deck_name}, {new_deck.user_id}')
             self.cur.execute(f'''
             select * from decks
             where
@@ -48,13 +48,13 @@ class DeckController:
                 self.connection.commit()
                 print(self.cur.rowcount, "record inserted")
                 self.db.deck_cache += [(new_deck.id, new_deck.deck_name)]
-                return 5
+                return 'deck_created'
             else:
-                return -5
+                return 'deck_found'
         except Error as e:
             print(e)
             time.sleep(0.5)
-            return -5
+            return 'deck_found'
         except Exception as exc:
             print(exc)
 
@@ -63,13 +63,13 @@ class DeckController:
         try:
             if len(self.db.deck_cache) == 0:
                 print('Connecting to database....')
-                sql = f'SELECT deckId, name FROM decks WHERE userId = \'{self._cur_user.id}\' ORDER BY deckId'
+                sql = f'SELECT deckId, name, userId FROM decks WHERE userId = \'{self._cur_user.id}\' ORDER BY deckId'
                 self.cur.execute(sql)
                 self.db.deck_cache += [i for i in self.cur if i not in self.db.deck_cache]
                 time.sleep(0.5)
         except Error as e:
             print(e)
-        return 6
+        [print(i) for i in self.db.deck_cache]
 
     def update_deck_name(self, name=None):
         name = self._cur_deck.deck_name if name is None else name
@@ -84,29 +84,33 @@ class DeckController:
                     self._cur_deck.deck_name = new_name
                 self.connection.commit()
                 print(self.cur.rowcount, 'record updated')
-                return 8
+                return 'deck_updated'
             else: 
-                return -9
+                return 'deck_found'
         except Error as e:
             print(e)
-            return -9
+            return 'deck_not_found'
     
-    def delete_deck(self, deckId):
+    def delete_deck(self):
+        print(self._cur_deck.id)
+        deckId = self._cur_deck.id if self._cur_deck else input('Deck id: ') 
         try:
             self.cur.execute(f'SELECT deckId, name, userId FROM decks WHERE deckId = \'{deckId}\'')
             deck = self.cur.fetchone()
             if deck is not None:
                 if (deck[2]) != self._cur_user.id:
-                    return -9
+                    return 'deck_not_found'
                 else:
                     self.cur.execute(f'DELETE FROM decks WHERE deckId = \'{deckId}\' AND userId = \'{self._cur_user.id}\'')
                     self.connection.commit()
                     self.db.update_deck_cache(Deck(deck_id=deck[0], deck_name=deck[1], user_id=deck[2]), action='DELETE')
                     self._cur_deck = None
                     print(self.cur.rowcount, 'record deleted')
-                    return -8
+                    return 'deck_deleted'
             else:
-                return -9
+                return 'deck_not_found'
+        except Exception as exc:
+            print(exc)
         except Error as e:
             print(e)
         
@@ -117,16 +121,18 @@ class DeckController:
             delete_all_cards(i[0])
             self.delete_deck(i[0])
     
-    def view_deck(self, name):
+    def view_deck(self, card):
+        name = input('Deck name: ')
         try:
             self.cur.execute(f'SELECT * FROM decks WHERE name = \'{name}\'')
             row = self.cur.fetchone()
             if row is not None:
                 self._cur_deck = Deck(deck_id=row[0], deck_name=row[1], user_id=row[2])
-                return 10
+                card.cur_deck = self._cur_deck
+                return 'use_deck'
             else:
                 row = None
-                return -9
+                return 'deck_not_found'
         except Error as e:
             print(e)
 
@@ -143,10 +149,3 @@ class DeckController:
 #   FROM decks 
 #   WHERE (name=\'{new_deck.deck_name}\' and userId=\'{new_deck.user_id}\') 
 #   HAVING COUNT(*) = 0')
-            
-# self.cur.execute(f'''
-            # select * from decks
-            # where
-            # name = (select name from decks where name = \'{new_deck.deck_name}\') and
-            # userId = (select userId from users where userId = \'{new_deck.user_id}\')
-            # ''')
